@@ -1,0 +1,9 @@
+[submodule "mongoose"]
+	path = mongoose
+	url = https://github.com/velho/mongoose/
+[submodule "libtomcrypt"]
+	path = libtomcrypt
+	url = https://github.com/velho/libtomcrypt
+[submodule "tlse"]
+	path = tlse
+	url = https://github.com/eduardsui/tlse
