@@ -1,9 +1,9 @@
 [submodule "mongoose"]
-	path = mongoose
+	path = deps/mongoose
 	url = https://github.com/velho/mongoose/
 [submodule "libtomcrypt"]
-	path = libtomcrypt
+	path = deps/libtomcrypt
 	url = https://github.com/velho/libtomcrypt
 [submodule "tlse"]
-	path = tlse
+	path = deps/tlse
 	url = https://github.com/eduardsui/tlse
