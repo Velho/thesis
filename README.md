@@ -1,5 +1,6 @@
+# Thesis
 
-** TLSE
+## Mongoose
 
 Just by accepting the mongoose interface and initializing the tlse application correctly.
 
@@ -14,3 +15,10 @@ Mongoose TLS interface implements the following functions
 | mg_tls_pending  | struct mg_connection * c | - | -
 
 TLSE can be adapted directly into the mongoose webserver with a custom implementation for the tls_tlse module.
+
+## TODO
+
+* Implement the Certificate chain.
+* Finish up the mongoose tls interface.
+  * Handshake
+  * etc ..
