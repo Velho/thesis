@@ -10,3 +10,6 @@
 [submodule "deps/googletest"]
 	path = deps/googletest
 	url = https://github.com/google/googletest
+[submodule "deps/cutest"]
+	path = deps/cutest
+	url = https://github.com/Velho/cutest
