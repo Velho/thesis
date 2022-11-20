@@ -3,24 +3,23 @@
 add_executable (test_tls_tlse
     test_tls_tlse_check.c)
 
-# target_compile_options(test_tls_tlse
-#     PUBLIC "-pthread"
-# )
+find_package(Threads REQUIRED) # Fix to DSO missing with libcheck
 
 target_link_libraries (test_tls_tlse
-    PRIVATE
-    thesis-tls
-    mongoose
+    PUBLIC
+    Threads::Threads
     check
+    
+    # thesis-tls
+    # mongoose
 )
 
 message ("${CMAKE_BINARY_DIR}")
 target_include_directories (test_tls_tlse
     PUBLIC
-    # $<INSTALL_INTERFACE:deps/check/src>
-    ${PROJECT_SOURCE_DIR}/deps/check/src
     ${CMAKE_BINARY_DIR}/deps/check/src
     ${CMAKE_BINARY_DIR}/deps/check
+    ${PROJECT_SOURCE_DIR}/deps/check/src
     ${PROJECT_SOURCE_DIR}/deps/mongoose/src
     ${PROJECT_SOURCE_DIR}/deps/tlse
     ${PROJECT_SOURCE_DIR}/src

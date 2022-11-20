@@ -6,6 +6,8 @@ list (APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # TODO : Add some config var to enable/disable testing.
 enable_testing()
+
+add_subdirectory (deps/check)
 add_subdirectory (tests)
 
 # Define the build definitions.
