@@ -13,3 +13,6 @@
 [submodule "deps/cutest"]
 	path = deps/cutest
 	url = https://github.com/Velho/cutest
+[submodule "deps/check"]
+	path = deps/check
+	url = https://github.com/libcheck/check
