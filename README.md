@@ -17,9 +17,13 @@ Mongoose TLS interface implements the following functions
 TLSE can be adapted directly into the mongoose webserver with a custom implementation for the tls_tlse module.
 
 ## TODO
-
 * Implement the Certificate chain.
 * Finish up the mongoose tls interface.
   * Handshake
   * etc ..
 * Add unit tests, which tests the implemented interface.
+
+## TLS
+
+### Handshake
+

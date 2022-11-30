@@ -5,7 +5,7 @@
 
 START_TEST (TLS_LoadFile)
 {
-    ck_assert_int_eq(4, 4);
+    ck_assert_int_eq(4, 2);
 }
 END_TEST
 

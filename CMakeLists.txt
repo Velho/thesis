@@ -33,7 +33,8 @@ set (THESIS_TLS_SOURCES
     src/tls_tlse.h
     src/tls_tlse.c)
 
-
+# thesis-tls includes the tls implementation for mongoose.
+# crypto functionalities provided by tomcrypt.
 add_library (thesis-tls ${THESIS_TLS_SOURCES})
 add_library (tlse       ${TLSE_SOURCES})
 add_library (mongoose   ${MONGOOSE_SOURCES})

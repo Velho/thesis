@@ -1,4 +1,3 @@
-# Include the cutest module.
 
 add_executable (test_tls_tlse
     test_tls_tlse_check.c)

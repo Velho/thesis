@@ -75,11 +75,14 @@ fail:
 }
 
 void mg_tls_handshake(struct mg_connection *c) {
-  (void) c;
+    struct mg_tls *tls = (struct mg_tls *)c->tls;
+
+
 }
 void mg_tls_free(struct mg_connection *c) {
   (void) c;
 }
+
 long mg_tls_recv(struct mg_connection *c, void *buf, size_t len) {
   return c == NULL || buf == NULL || len == 0 ? 0 : -1;
 }
