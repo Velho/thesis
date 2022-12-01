@@ -1,6 +1,11 @@
 
-add_executable (test_tls_tlse
-    test_tls_tlse_check.c)
+set (TEST_SUITE_TLS_SOURCES
+    test_tls.c
+)
+
+add_executable (test_tls_tlse 
+    ${TEST_SUITE_TLS_SOURCES}
+)
 
 find_package(Threads REQUIRED) # Fix to DSO missing with libcheck
 
