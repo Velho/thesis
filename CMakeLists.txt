@@ -2,13 +2,7 @@ cmake_minimum_required (VERSION 3.12)
 project (thesis)
 
 list (APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-
-
-# TODO : Add some config var to enable/disable testing.
-enable_testing()
-
-add_subdirectory (deps/check)
-add_subdirectory (tests)
+set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Define the build definitions.
 # MG_ARCH Initialized with a value
@@ -17,9 +11,14 @@ add_subdirectory (tests)
 
 set (MG_ARCH 1) # MG_ARCH_UNIX
 
-set (MONGOOSE_SOURCES
-    deps/mongoose/mongoose.h
-    deps/mongoose/mongoose.c)
+
+file (GLOB MONGOOSE_SOURCES
+    deps/mongoose/src/*.h
+    deps/mongoose/src/*.c)
+
+# set (MONGOOSE_SOURCES
+#     deps/mongoose/mongoose.h
+#     deps/mongoose/mongoose.c)
 
 set (TLSE_SOURCES
     deps/tlse/curve25519.c
@@ -29,7 +28,6 @@ set (TLSE_SOURCES
 
 
 set (THESIS_TLS_SOURCES
-    include/tls.h
     src/tls_tlse.h
     src/tls_tlse.c)
 
@@ -41,21 +39,30 @@ add_library (mongoose   ${MONGOOSE_SOURCES})
 
 # Add includes for the libtlse, mongoose and tlse from deps folder.
 target_include_directories(thesis-tls
-    PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/mongoose>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/mongoose/src>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/tlse>)
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/mongoose>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/mongoose/src>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/tlse>)
 
+target_include_directories(mongoose
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+# Definitions required to compile against custom tls implementation.
 set (MG_DEFINITIONS
         MG_ARCH=${MG_ARCH}
         MG_ENABLE_TLSE
         MG_ENABLE_CUSTOM_TLS)
 
 
+target_compile_definitions(mongoose
+    PUBLIC
+    ${MG_DEFINITIONS})
+
 target_compile_definitions(thesis-tls
     PUBLIC
     ${MG_DEFINITIONS})
+
 
 target_compile_definitions(tlse
     PUBLIC
@@ -68,4 +75,12 @@ target_link_libraries(thesis-tls
 target_link_libraries(mongoose
     PRIVATE 
         thesis-tls)
+
+
+# TODO : Add some config var to enable/disable testing.
+enable_testing()
+
+add_subdirectory (deps/check)
+add_subdirectory (tests)
+
 
