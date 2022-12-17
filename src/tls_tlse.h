@@ -5,8 +5,7 @@
 #include <tlse.h>
 
 struct mg_tls {
-    struct TLSContext *ctx;         // SSL context.
-    struct TLSCertificate *chain;   // Certificate chain.
+    struct TLSContext* ctx;   // SSL context.
 };
 
 #endif
