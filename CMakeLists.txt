@@ -9,7 +9,7 @@ set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # MG_ENABLE_CUSTOM_TLS
 # MG_ENABLE_TLSE
 
-set (MG_ARCH 1) # MG_ARCH_UNIX
+set (MG_ARCH "MG_ARCH_UNIX") # str or int ? 
 
 
 file (GLOB MONGOOSE_SOURCES
@@ -66,7 +66,8 @@ target_compile_definitions(thesis-tls
 
 target_compile_definitions(tlse
     PUBLIC
-        TLS_AMALGAMATION)
+        TLS_AMALGAMATION
+        DDEBUG)
 
 target_link_libraries(thesis-tls
     PRIVATE
