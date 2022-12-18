@@ -43,5 +43,5 @@ add_custom_command(
     TARGET test_tls_tlse POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
         ${CMAKE_CURRENT_SOURCE_DIR}/root.pem
-        ${CMAKE_BINARY_DIR})
-
+        ${CMAKE_CURRENT_BINARY_DIR}/root.pem
+)
