@@ -7,6 +7,6 @@
 [submodule "tlse"]
 	path = deps/tlse
 	url = https://github.com/eduardsui/tlse
-[submodule "deps/check"]
+[submodule "check"]
 	path = deps/check
 	url = https://github.com/libcheck/check
