@@ -1,13 +1,21 @@
+
+# Include some utilities from cmake modules.
+include (${CMAKE_SOURCE_DIR}/cmake/functions.cmake)
+
+# Configuration for the test suite.
+set (TARGET_NAME test_tls_tlse)
+
 set (TEST_SUITE_TLS_SOURCES
     test_tls.c
 )
 
-add_executable (test_tls_tlse 
+add_executable (${TARGET_NAME}
     ${TEST_SUITE_TLS_SOURCES}
 )
 
-find_package(Threads REQUIRED) # Fix to DSO missing with libcheck
+find_package(Threads REQUIRED) # Work around: Fix to DSO missing with libcheck
 
+# TODO : Are these defined already?
 set (MG_DEFINITIONS
     # MG_ARCH=${MG_ARCH}
         MG_ENABLE_TLSE
@@ -27,7 +35,6 @@ target_link_libraries (test_tls_tlse
         mongoose
 )
 
-message ("${CMAKE_BINARY_DIR}")
 target_include_directories (test_tls_tlse
     PUBLIC
     ${CMAKE_BINARY_DIR}/deps/check/src
@@ -39,17 +46,14 @@ target_include_directories (test_tls_tlse
 )
 
 add_test (NAME test_tls_tlse COMMAND test_tls_tlse)
-add_custom_command(
-    TARGET test_tls_tlse POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_CURRENT_SOURCE_DIR}/root.pem
-        ${CMAKE_CURRENT_BINARY_DIR}/root.pem
+
+set (TEST_SERVER_FILES
+    "root.pem"
+    "server.pem"
+    "ss_ca.pem"
+    "ss_server.pem"
 )
 
-add_custom_command(
-    TARGET test_tls_tlse POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_CURRENT_SOURCE_DIR}/server.pem
-        ${CMAKE_CURRENT_BINARY_DIR}/server.pem
-)
+# Copy the testing files over to build folder.
+thesis_copy_build (${TARGET_NAME} "${TEST_SERVER_FILES}")
 
