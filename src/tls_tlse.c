@@ -25,13 +25,13 @@ void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts)
     c->tls = tls;
     if (c->tls == NULL)
     {
-        mg_error(c, "TLS_OOM");
+        mg_error(c, "tls_tlse : tls alloc failed.");
         goto fail;
     }
 
     if (c->is_client)
     {
-        mg_error(c, "tlse : is_client");
+        mg_error(c, "tls_tlse : is_client is set, server only supported.");
         goto fail;
     }
 
@@ -51,34 +51,30 @@ void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts)
 
     if (tls->ctx == NULL)
     {
-        mg_error(c, "tls_create_context");
+        mg_error(c, "tls_tlse : failed to create tls context");
         goto fail;
     }
-
 
     // 2.1. Set any TLS interface options here.
     // ..
     // 3. Setup the certificate authority.
 
-    // ca must be specified to load the file.
-    if (opts->ca == NULL)
-    {
-        mg_error(c, "Certificate authority not specified.");
-        goto fail;
-    }
-
     int rc = 0;
-    struct mg_str s = mg_loadfile(fs, opts->ca);
-    rc = tls_load_certificates(tls->ctx, (unsigned char*)s.ptr, s.len + 1);
+    struct mg_str s = { 0 };
 
-    if (!rc) // Provided count of certificates should be > 0.
+    if (opts->ca != NULL && opts->ca[0] != '\0')
     {
-        mg_error(c, "Failed to load the certificates");
-        goto fail;
+        s = mg_loadfile(fs, opts->ca);
+        rc = tls_load_root_certificates(tls->ctx, (unsigned char*)s.ptr, s.len + 1);
+
+        if (!rc) // Provided count of root certificates should be > 0.
+        {
+            mg_error(c, "tls_tlse : failed to load the certificate authorities");
+            goto fail;
+        }
     }
 
     // 3.1 Setup the pk
-
     if (opts->cert != NULL && opts->cert[0] != '\0') 
     {
         const char* key = opts->certkey == NULL ? opts->cert : opts->certkey;
@@ -88,7 +84,7 @@ void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts)
         rc = tls_load_certificates(tls->ctx, (unsigned char*)s.ptr, s.len + 1);
         if (rc == 0)
         {
-            mg_error(c, "Invalid tls server cert.");
+            mg_error(c, "tls_tlse : invalid tls server certificate");
             goto fail;
         }
 
