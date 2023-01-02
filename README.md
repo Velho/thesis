@@ -1,5 +1,49 @@
 # Thesis
 
+## Build
+
+### Repository
+
+Git clone the project,
+`git clone https://../.git`
+
+Initialize the submodules (submodules found under 'deps' folder).
+`git submodule update --init`
+
+### Compiling
+
+Compiler version used to test, (minimum requirements):
+  * GCC     12.2.0
+  * Clang   14.0.6
+  * CMake   3.25.1
+
+3rd-party dependencies:
+  - None
+Posix library compatible, requires the posix threads library
+for the unit tests (libcheck).
+
+Building the library :
+
+1) Create folder for the build
+`mkdir .build`
+2) Run the CMake configuration
+`cmake -S . -B .build`
+or
+`cmake -G "Generator" -S . -B .build`
+
+3) Building the project either from the root folder or the build folder
+`cmake --build .build`
+or
+```
+cd .build/
+make
+```
+4) Unit tests
+```
+cd .build/
+make test
+```
+
 ## Mongoose
 
 Just by accepting the mongoose interface and initializing the tlse application correctly.
