@@ -6,7 +6,8 @@ include (${CMAKE_SOURCE_DIR}/cmake/functions.cmake)
 set (TARGET_NAME test_tls_tlse)
 
 set (TEST_SUITE_TLS_SOURCES
-    test_tls.c
+    test_tlse.c
+    test_tls_init.c
 )
 
 add_executable (${TARGET_NAME}
@@ -15,7 +16,7 @@ add_executable (${TARGET_NAME}
 
 find_package(Threads REQUIRED) # Work around: Fix to DSO missing with libcheck
 
-# TODO : Are these defined already?
+# TODO : Are these defined already? Or can be added through the main target?
 set (MG_DEFINITIONS
     # MG_ARCH=${MG_ARCH}
         MG_ENABLE_TLSE
@@ -48,10 +49,22 @@ target_include_directories (test_tls_tlse
 add_test (NAME test_tls_tlse COMMAND test_tls_tlse)
 
 set (TEST_SERVER_FILES
-    "root.pem"
-    "server.pem"
-    "ss_ca.pem"
-    "ss_server.pem"
+    #     "certs/root.pem"
+    #     "certs/server.pem"
+    #     "certs/ss_ca.pem"
+    #     "certs/ss_server.pem"
+    #     "certs/fullchain.pem"
+    #     "certs/privkey.pem"
+    "certs/ca.pem"
+    "certs/cert-2048.pem"
+    "certs/pk-rsa-2048.pem"
+    # FIXME : testing out the ecc alg
+    # can be disabled and used only with rsa keys.
+    "certs/ecsda/cert.pem"
+    "certs/ecsda/private-key.pem"
+    # FIXME : better filenames for the ecc keys
+    # "certs/ecsda/MYCSR.csr"
+    # "certs/ecsda/PRIVATEKEY.key"
 )
 
 # Copy the testing files over to build folder.
