@@ -1,13 +1,15 @@
 #include <check.h>
 
 #include <mongoose.h>
+
+/* Include the TLSE library. */
+// #include <tlse.h>
+#include <tlse.c>
+
 #include "tls_tlse.c" /* TARGET */
 
 #define TLS_ECDSA_SUPPORTED
 
-#include <stdlib.h>
-#include <string.h>
-#include "tlse.c"
 
 #define TLSE_MG_OPT_CA      "certs/ca.pem"
 #define TLSE_MG_OPT_CERT    "certs/cert-2048.pem"
@@ -154,11 +156,11 @@ START_TEST (test_tlse_init_pk_failure)
     struct mg_tls_opts opts = { 0 };
 
     opts.ca = TLSE_MG_OPT_CA;
-    opts.cert = TLSE_MG_OPT_CERT; 
+    opts.cert = TLSE_MG_OPT_CERT;
     opts.certkey = TLSE_MG_OPT_KEY;
 
     mg_tls_init(&c, &opts); // Call the unit
-    
+
     unsigned expected_is_closing = 1;
     ck_assert_ptr_null(c.tls);
     ck_assert_uint_eq(c.is_closing, expected_is_closing);
@@ -174,7 +176,7 @@ START_TEST (test_tlse_init_pk_ecdha)
     struct mg_tls_opts opts = { 0 };
 
     opts.ca = TLSE_MG_OPT_CA;
-    opts.cert = "certs/ecsda/cert.pem"; 
+    opts.cert = "certs/ecsda/cert.pem";
     opts.certkey = "certs/ecsda/private-key.pem";
 
     mg_tls_init(&c, &opts); // Call the unit
@@ -194,7 +196,7 @@ START_TEST (test_tlse_init_success)
     struct mg_tls_opts opts = { 0 };
 
     opts.ca = TLSE_MG_OPT_CA;
-    opts.cert = TLSE_MG_OPT_CERT; 
+    opts.cert = TLSE_MG_OPT_CERT;
     opts.certkey = TLSE_MG_OPT_KEY;
 
     mg_tls_init(&c, &opts); // Call the unit
@@ -220,14 +222,14 @@ END_TEST
 TCase* tls_tlse_init_tcase(void)
 {
     TCase *tc;
-    tc = tcase_create("mg-tls - tlse_init");
+    tc = tcase_create("mg-tls - tlse init");
 
     tcase_add_test(tc, test_tlse_init_alloc);
     tcase_add_test(tc, test_tlse_init_context);
     tcase_add_test(tc, test_tlse_init_ca_root);
     tcase_add_test(tc, test_tlse_init_pk);
-    tcase_add_test(tc, test_tlse_init_success);
     tcase_add_test(tc, test_tlse_init_pk_ecdha);
+    tcase_add_test(tc, test_tlse_init_success);
 
     return tc;
 }

@@ -1,5 +1,5 @@
 
-#include "test_tls_init.c"
+#include "test_tls_init.h"
 
 Suite* tls_tlse_suite(void)
 {
@@ -7,7 +7,7 @@ Suite* tls_tlse_suite(void)
     s = suite_create("tlse suite");
 
     suite_add_tcase(s, tls_tlse_init_tcase());
-    
+
     return s;
 }
 
@@ -15,7 +15,7 @@ int main(void)
 {
     int num_fail = 0;
 
-    // FIXME : One big test suite which would contain 
+    // FIXME : One big test suite which would contain
     // multiple test cases.
     Suite* s    = tls_tlse_suite();
     SRunner* sr = srunner_create(s);
