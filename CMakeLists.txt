@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.12)
 project (thesis)
 
-list (APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+list (APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Define the build definitions.
@@ -9,7 +9,7 @@ set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # MG_ENABLE_CUSTOM_TLS
 # MG_ENABLE_TLSE
 
-set (MG_ARCH "MG_ARCH_UNIX") # str or int ? 
+set (MG_ARCH "MG_ARCH_UNIX") # -DMG_ARCH=MG_ARCH_UNIX is this correct ?
 
 
 file (GLOB MONGOOSE_SOURCES
@@ -67,7 +67,7 @@ target_compile_definitions(thesis-tls
 target_compile_definitions(tlse
     PUBLIC
         TLS_AMALGAMATION
-        DDEBUG)
+        DEBUG)
 
 target_link_libraries(thesis-tls
     PRIVATE

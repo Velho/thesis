@@ -67,6 +67,7 @@ set (TEST_SERVER_FILES
     # "certs/ecsda/PRIVATEKEY.key"
 )
 
+# Include some utilities from cmake modules.
+include (certificates)
 # Copy the testing files over to build folder.
-thesis_copy_build (${TARGET_NAME} "${TEST_SERVER_FILES}")
-
+thesis_copy_certificates(${TARGET_NAME})
