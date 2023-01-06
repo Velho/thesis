@@ -74,9 +74,11 @@ target_link_libraries(thesis-tls
         tlse)
 
 target_link_libraries(mongoose
-    PRIVATE 
+    PRIVATE
         thesis-tls)
 
+# Build the examples
+set (THESIS_TLSE_EXAMPLES   TRUE)
 
 # TODO : Add some config var to enable/disable testing.
 enable_testing()
@@ -84,4 +86,8 @@ enable_testing()
 add_subdirectory (deps/check)
 add_subdirectory (tests)
 
+
+if (THESIS_TLSE_EXAMPLES)
+    add_subdirectory (examples)
+endif ()
 
