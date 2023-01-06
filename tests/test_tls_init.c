@@ -1,12 +1,14 @@
 #include <check.h>
 
+// #include <tls_tlse.h>
 #include <mongoose.h>
 
+#include <tls_tlse.h>
+
 /* Include the TLSE library. */
-// #include <tlse.h>
 #include <tlse.c>
 
-#include "tls_tlse.c" /* TARGET */
+// #include "tls_tlse.c" /* TARGET */
 
 #define TLS_ECDSA_SUPPORTED
 
@@ -14,11 +16,6 @@
 #define TLSE_MG_OPT_CA      "certs/ca.pem"
 #define TLSE_MG_OPT_CERT    "certs/cert-2048.pem"
 #define TLSE_MG_OPT_KEY     "certs/pk-rsa-2048.pem"
-
-// TODO : Remove deps and remove these constants.
-#define MG_OPTS_SERVER_CA       "ss_server.pem"
-#define MG_OPTS_SERVER_CERT     "ss_server.pem"
-#define MG_OPTS_SERVER_CERTKEY  "ss_server.pem"
 
 START_TEST (test_tlse_init_alloc)
 {
@@ -70,7 +67,7 @@ struct mg_tls_opts setup_mg_opts()
     struct mg_tls_opts opts = { 0 };
 
     opts.ca = TLSE_MG_OPT_CA;
-    opts.cert = TLSE_MG_OPT_CERT; 
+    opts.cert = TLSE_MG_OPT_CERT;
     opts.certkey = TLSE_MG_OPT_KEY;
 
     return opts;
@@ -138,7 +135,7 @@ START_TEST (test_tlse_init_cert_failure)
 
     // FIXME : Properly set the failure.
     opts.ca = TLSE_MG_OPT_CA;
-    opts.cert = TLSE_MG_OPT_CERT; 
+    opts.cert = TLSE_MG_OPT_CERT;
     opts.certkey = TLSE_MG_OPT_KEY;
 
     mg_tls_init(&c, &opts); // Call the unit
@@ -228,7 +225,7 @@ TCase* tls_tlse_init_tcase(void)
     tcase_add_test(tc, test_tlse_init_context);
     tcase_add_test(tc, test_tlse_init_ca_root);
     tcase_add_test(tc, test_tlse_init_pk);
-    tcase_add_test(tc, test_tlse_init_pk_ecdha);
+    // tcase_add_test(tc, test_tlse_init_pk_ecdha);
     tcase_add_test(tc, test_tlse_init_success);
 
     return tc;

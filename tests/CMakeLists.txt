@@ -6,6 +6,8 @@ set (TEST_SUITE_TLS_SOURCES
     test_tlse.c
     test_tls_init.h
     test_tls_init.c
+    # test_tls_hs.h
+    # test_tls_hs.c
 )
 
 add_executable (${TARGET_NAME}
