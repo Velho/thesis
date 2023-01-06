@@ -6,22 +6,20 @@
 
 #if MG_ENABLE_TLSE
 
-// Define the TLS version to 1.3, TODO : Make this compiler opt.
-#define MG_TLSE_VERSION TLS_V13
 
 static struct mg_str mg_loadfile(struct mg_fs *fs, const char *path);
-// Is this required to be declaration?
-// static void mg_tls_free(struct mg_connection *c);
+static int mg_tls_err(struct mg_tls *tls, int res);
 
-void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts) 
+
+void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts)
 {
     static bool is_initialized = false;
 
     // 1. Allocate the mg_tls context.
     // Setup a mg_fs to load the certificate and priv key from file.
-    struct mg_fs *fs = opts->fs == NULL ? &mg_fs_posix : opts->fs;
-    struct mg_tls *tls = (struct mg_tls *) calloc(1, sizeof(*tls));
-    
+    struct mg_fs* fs = opts->fs == NULL ? &mg_fs_posix : opts->fs;
+    struct mg_tls* tls = (struct mg_tls *) calloc(1, sizeof(*tls));
+
     c->tls = tls;
     if (c->tls == NULL)
     {
@@ -75,7 +73,7 @@ void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts)
     }
 
     // 3.1 Setup the pk
-    if (opts->cert != NULL && opts->cert[0] != '\0') 
+    if (opts->cert != NULL && opts->cert[0] != '\0')
     {
         const char* key = opts->certkey == NULL ? opts->cert : opts->certkey;
 
@@ -91,45 +89,87 @@ void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts)
         // Load the priv key.
         s = mg_loadfile(fs, key);
         rc = tls_load_private_key(tls->ctx, (unsigned char*)s.ptr, s.len + 1);
-        // rc should be 1 in case of successfully loaded private key. 
-        if (rc == 0)
+        // rc should be 1 in case of successfully loaded private key.
+        if (rc <= 0)
         {
-            mg_error(c, "Invalid tls pk.");
+            mg_error(c, "tls_tlse : invalid tls pk, ret : %d", rc);
             goto fail;
         }
     }
 
+    // 3.3. Ciphers
+    // 3.4. Hostname
+    // Hostname or servername is set only for the clients connecting to a server.
     // 4. Set the mg_connection statuses.
     c->is_tls = 1;
     c->is_tls_hs = 1;
 
     MG_DEBUG(("%lu SSL OK", c->id));
 
-    return; // FIXME : return for now.
-
+    return;
 fail:
     c->is_closing = 1;
     mg_tls_free(c);
 }
 
-void mg_tls_handshake(struct mg_connection *c) {
-    struct mg_tls *tls = (struct mg_tls *)c->tls;
+// FIXME : Replace the compatible layer with tlse appropriate functionality ??
 
+void mg_tls_handshake(struct mg_connection* c) {
+    struct mg_tls* tls = (struct mg_tls*)c->tls;
+    int rc;
+
+    // Set file descriptor with the ssl data.
+    SSL_set_fd(tls->ctx, (int) (size_t) c->fd);
+    // accept is for the server-side only.
+    // mbedtls and openssl accept/ssl_handshake returns error code
+    // if still pending READ or WRITE, how this should be handled
+    // here? If it's still pending, do we return 0?
+    rc = SSL_accept(tls->ctx);
+    if (rc)
+    {
+        MG_DEBUG(("%lu success", c->id));
+        c->is_tls_hs = 0; // handshake done
+    }
+    else
+    {
+        // error
+        mg_error(c, "tlse : tls hs failed, ret %d", rc);
+    }
 }
 
-long mg_tls_recv(struct mg_connection *c, void *buf, size_t len) {
-  return c == NULL || buf == NULL || len == 0 ? 0 : -1;
+long mg_tls_recv(struct mg_connection* c, void* buf, size_t len)
+{
+    struct mg_tls* tls = (struct mg_tls*)c->tls;
+    int n = SSL_read(tls->ctx, buf, (int)len);
+    return n == 0 ? -1 : n < 0 && mg_tls_err(tls, n) == 0 ? 0 : n;
 }
-long mg_tls_send(struct mg_connection *c, const void *buf, size_t len) {
-  return c == NULL || buf == NULL || len == 0 ? 0 : -1;
+
+long mg_tls_send(struct mg_connection *c, const void *buf, size_t len)
+{
+    struct mg_tls* tls = (struct mg_tls*)c->tls;
+    int n = SSL_write(tls->ctx, buf, (int) len);
+    return n == 0 ? -1 : n < 0 && mg_tls_err(tls, n) == 0 ? 0 : n;
 }
-size_t mg_tls_pending(struct mg_connection *c) {
-  (void) c;
-  return 0;
+size_t mg_tls_pending(struct mg_connection *c)
+{
+    struct mg_tls* tls = (struct mg_tls*)c->tls;
+    return tls == NULL ? 0 : (size_t) SSL_pending(tls->ctx);
+}
+
+void mg_tls_free(struct mg_connection* c)
+{
+    struct mg_tls* tls = (struct mg_tls*)c->tls;
+
+    // Clean up the tls->context.
+    SSL_CTX_free(tls->ctx);
+    free(tls);
+
+    c->tls = NULL;
 }
 
 // static struct mg_str mg_loadfile(struct mg_fs *fs, const char *path);
-struct mg_str mg_loadfile(struct mg_fs *fs, const char *path) {
+struct mg_str mg_loadfile(struct mg_fs *fs, const char *path)
+{
     size_t n = 0;
     if (path[0] == '-')
     {
@@ -139,14 +179,20 @@ struct mg_str mg_loadfile(struct mg_fs *fs, const char *path) {
     return mg_str_n(p, n);
 }
 
-void mg_tls_free(struct mg_connection *c)
+static int mg_tls_err(struct mg_tls *tls, int res)
 {
-    struct mg_tls* tls = (struct mg_tls *)c->tls;
+    int err = SSL_get_error(tls->ctx, res);
+    // We've just fetched the last error from the queue.
+    // Now we need to clear the error queue. If we do not, then the following
+    // can happen (actually reported):
+    //  - A new connection is accept()-ed with cert error (e.g. self-signed cert)
+    //  - Since all accept()-ed connections share listener's context,
+    //  - *ALL* SSL accepted connection report read error on the next poll cycle.
+    //    Thus a single errored connection can close all the rest, unrelated ones.
+    // Clearing the error keeps the shared SSL_CTX in an OK state.
 
-    // Clean up the tls->context.
-
-    // free(tls);
-    // c->tls = NULL;
+    return err;
 }
 
 #endif
+
