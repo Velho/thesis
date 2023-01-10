@@ -8,7 +8,7 @@
 /* Include the TLSE library. */
 #include <tlse.c>
 
-// #include "tls_tlse.c" /* TARGET */
+#include "tls_tlse.c" /* TARGET */
 
 #define TLS_ECDSA_SUPPORTED
 
