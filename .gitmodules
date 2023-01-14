@@ -6,7 +6,7 @@
 	url = https://github.com/velho/libtomcrypt
 [submodule "tlse"]
 	path = deps/tlse
-	url = https://github.com/eduardsui/tlse
+	url = https://github.com/velho/tlse
 [submodule "check"]
 	path = deps/check
 	url = https://github.com/libcheck/check
