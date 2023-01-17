@@ -1,9 +1,8 @@
 #include <mongoose.h>
+#include <string.h>
 
 static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
 {
-    // TODO : Set up the TLS context.
-
     struct mg_http_serve_opts opts =
     {
         .root_dir = "." // Serve local dir
@@ -34,6 +33,7 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
     }
     else if (ev == MG_EV_HTTP_MSG)
     {
+        MG_INFO(("SERVER : HTTP Established"));
         mg_http_reply(c, 200, "Content-Type: text/plain\r\n", "Hello, %s\n", "world");
        //  mg_http_serve_dir(c, ev_data, &opts);
     }
@@ -44,6 +44,9 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
     {
         MG_INFO(("SERVER else : %d", ev));
     }
+
+    // MG_INFO(("Errno : %s", strerror(errno)));
+
 }
 
 int main(int argc, char *argv[]) {
