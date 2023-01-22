@@ -9,6 +9,7 @@
 
 struct mg_tls {
     struct TLSContext* ctx;     /* SSL context. */
+    struct TLSContext* pClientContext;
 };
 
 #endif
