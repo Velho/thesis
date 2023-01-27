@@ -1,17 +1,41 @@
+# CMake configuration for the dependencies.
+# Dependencies include, tlse, mongoose, check, tomcrypt.
+# Velho
+
+# set (BUILD_TLSE_EXAMPLES TRUE)
+
 # Define the build definitions.
 # MG_ARCH Initialized with a value
 # MG_ENABLE_CUSTOM_TLS
 # MG_ENABLE_TLSE
 
-set (MG_ARCH_CUSTOM "0")
-set (MG_ARCH_UNIX "1")
-set (MG_ARCH_WIN32 "2")
-set (MG_ARCH ${MG_ARCH_UNIX} PARENT_SCOPE) #
+if (${THESIS_BUILD_MONGOOSE})
+    message ("Building thesis as part of thesis library.")
 
-file (GLOB MONGOOSE_SOURCES
-    mongoose/src/*.h
-    mongoose/src/*.c)
+    file (GLOB MONGOOSE_SOURCES
+        mongoose/src/*.h
+        mongoose/src/*.c)
 
+    add_library (mongoose   ${MONGOOSE_SOURCES})
+
+    target_include_directories(mongoose
+        PUBLIC
+            ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+    target_compile_definitions(mongoose
+        PUBLIC
+            ${THESIS_MG_DEFINITIONS})
+
+
+    set (MONGOOSE_INCLUDE_DIR
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/mongoose>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/mongoose/src>
+        PARENT_SCOPE)
+
+    target_link_libraries(mongoose
+        PRIVATE
+            thesis-tls)
+endif ()
 
 set (TLSE_SOURCES
     tlse/curve25519.c
@@ -19,31 +43,15 @@ set (TLSE_SOURCES
     tlse/tlse.h
     tlse/tlse.c)
 
-
-
 add_library (tlse       ${TLSE_SOURCES})
-add_library (mongoose   ${MONGOOSE_SOURCES})
-
-target_include_directories(mongoose
-    PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/src)
-
-target_compile_definitions(mongoose
-    PUBLIC
-    ${MG_DEFINITIONS})
 
 target_compile_definitions(tlse
     PUBLIC
         TLS_AMALGAMATION
         DEBUG)
 
-target_link_libraries(mongoose
-    PRIVATE
-        thesis-tls)
 
-set (BUILD_TLSE_EXAMPLES TRUE)
-
-if (${BUILD_TLSE_EXAMPLES})
+if (THESIS_TLSE_EXAMPLES EQUAL TRUE)
     include (certificates)
 
     set (TLSE_EXAMPLE_HW_SOURCES tlse/examples/tlshelloworld.c)
@@ -57,5 +65,5 @@ if (${BUILD_TLSE_EXAMPLES})
         PRIVATE
             DEBUG)
 
-    thesis_copy_certificates ("tls-helloworld")
+    thesis_copy_certificates (tls-helloworld)
 endif ()
