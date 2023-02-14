@@ -12,6 +12,9 @@
 if (${THESIS_BUILD_MONGOOSE})
     message ("Building thesis as part of thesis library.")
 
+    # set_property is not supported in cmake 2.8
+    list(APPEND CMAKE_C_FLAGS "-std=gnu99")
+
     file (GLOB MONGOOSE_SOURCES
         mongoose/src/*.h
         mongoose/src/*.c)
@@ -37,16 +40,25 @@ if (${THESIS_BUILD_MONGOOSE})
             thesis-tls)
 endif ()
 
+message ("Current source dir : ${CMAKE_CURRENT_SOURCE_DIR}")
+# configure the sources for target tlse
 set (TLSE_SOURCES
-    tlse/curve25519.c
-    tlse/libtomcrypt.c
-    tlse/tlse.h
-    tlse/tlse.c)
+    ${CMAKE_CURRENT_SOURCE_DIR}/tlse/curve25519.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/tlse/libtomcrypt.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/tlse/tlse.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/tlse/tlse.c)
 
 add_library (tlse       ${TLSE_SOURCES})
 
-target_compile_definitions(tlse
-    PUBLIC
+set_property (TARGET tlse     PROPERTY C_STANDRD 99)
+
+# target_include_directories (tlse
+#     PUBLIC
+#         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/libtomcrypt/src/headers>
+# )
+
+target_compile_definitions (tlse
+    PRIVATE
         TLS_AMALGAMATION
         DEBUG)
 
@@ -67,3 +79,4 @@ if (THESIS_TLSE_EXAMPLES EQUAL TRUE)
 
     thesis_copy_certificates (tls-helloworld)
 endif ()
+
