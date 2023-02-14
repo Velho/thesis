@@ -78,6 +78,12 @@ void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts)
 
         // Load the cert key.
         s = mg_loadfile(fs, opts->cert);
+        // if (s.len == 0)
+        // {
+        //     mg_error(c, "tls_tlse : invalid length tls server certificate");
+        //     goto fail;
+        // }
+
         rc = tls_load_certificates(g_pServerContext, (unsigned char*)s.ptr, s.len + 1);
         if (rc == 0)
         {
@@ -88,6 +94,7 @@ void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts)
         // Load the priv key.
         s = mg_loadfile(fs, key);
         rc = tls_load_private_key(g_pServerContext, (unsigned char*)s.ptr, s.len + 1);
+
         // rc should be 1 in case of successfully loaded private key.
         if (rc <= 0)
         {
@@ -102,6 +109,7 @@ void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts)
     // 4. Set the mg_connection statuses.
     c->is_tls = 1;
     c->is_tls_hs = 1;
+    tls->ctx = g_pServerContext;
 
     MG_DEBUG(("%lu SSL OK", c->id));
 
@@ -186,7 +194,9 @@ void mg_tls_handshake(struct mg_connection* c) {
     // but that depends if the tls_handshake is called by event handler
     // until is_tls_hs is set to 0.
     while (!tls_established(client))
+    {
         do_handshake(client, c->fd, &readBytes);
+    }
 
     if (tls_established(client) == 1)
     {
@@ -253,7 +263,7 @@ size_t mg_tls_pending(struct mg_connection *c)
 {
     struct mg_tls* tls = (struct mg_tls*)c->tls;
     // Pending true is returned if application_buffer_len is > 0
-    return tls == NULL ? 0 : (size_t) SSL_pending(tls->pClientContext);
+    return tls == NULL ? 0 : (size_t) SSL_pending(tls->ctx);
 }
 
 void mg_tls_free(struct mg_connection* c)
@@ -261,7 +271,7 @@ void mg_tls_free(struct mg_connection* c)
     struct mg_tls* tls = (struct mg_tls*)c->tls;
 
     // Clean up the tls->context.
-    SSL_CTX_free(tls->pClientContext);
+    tls_destroy_context(tls->ctx);
     free(tls);
 
     c->tls = NULL;
@@ -276,6 +286,7 @@ struct mg_str mg_loadfile(struct mg_fs *fs, const char *path)
         return mg_str(path);
     }
     char *p = mg_file_read(fs, path, &n);
+    MG_INFO(("Reading file %s => (%d) %p", path, n, p));
     return mg_str_n(p, n);
 }
 
