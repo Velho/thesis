@@ -40,6 +40,10 @@ if (${THESIS_BUILD_MONGOOSE})
             thesis-tls)
 endif ()
 
+include (${CMAKE_CURRENT_SOURCE_DIR}/tomcrypt_sources.cmake)
+add_library (tomcrypt
+    ${TOMCRYPT_SOURCES} ${TOMCRYPT_PUBLIC_HEADERS})
+
 message ("Current source dir : ${CMAKE_CURRENT_SOURCE_DIR}")
 # configure the sources for target tlse
 set (TLSE_SOURCES
@@ -50,18 +54,16 @@ set (TLSE_SOURCES
 
 add_library (tlse       ${TLSE_SOURCES})
 
-set_property (TARGET tlse     PROPERTY C_STANDRD 99)
-
-# target_include_directories (tlse
-#     PUBLIC
-#         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/libtomcrypt/src/headers>
-# )
+# set_property (TARGET tlse     PROPERTY C_STANDRD 99)
+target_include_directories (tlse PUBLIC tomcrypt)
+# $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/libtomcrypt/src/headers>)
 
 target_compile_definitions (tlse
-    PRIVATE
-        TLS_AMALGAMATION
+    PUBLIC
+    # TLS_AMALGAMATION
         DEBUG)
 
+target_link_libraries (tlse tomcrypt)
 
 if (THESIS_TLSE_EXAMPLES EQUAL TRUE)
     include (certificates)
