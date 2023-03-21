@@ -10,3 +10,6 @@
 [submodule "check"]
 	path = deps/check
 	url = https://github.com/libcheck/check
+[submodule "deps/libtommath"]
+	path = deps/libtommath
+	url = https://github.com/libtom/libtommath
