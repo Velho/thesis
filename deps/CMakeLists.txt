@@ -9,7 +9,7 @@
 # MG_ENABLE_CUSTOM_TLS
 # MG_ENABLE_TLSE
 
-if (${THESIS_BUILD_MONGOOSE})
+if (THESIS_BUILD_MONGOOSE)
     message ("Building thesis as part of thesis library.")
 
     file (GLOB MONGOOSE_SOURCES
