@@ -19,7 +19,8 @@ static bool g_IsInitialized = false;
 static struct TLSContext* g_pServerContext = NULL;
 
 /* Private functions */
-static struct mg_str mg_loadfile(struct mg_fs *fs, const char *path);
+static struct mg_str mg_loadfile(struct mg_fs* fs, const char* path);
+static char* tls_file_read(const char* path, size_t* sizep);
 static int thesis_verify_signature(struct TLSContext* context, struct TLSCertificate **cert, int len);
 
 void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts)
@@ -64,7 +65,7 @@ void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts)
     // 2.1. Set any TLS interface options here.
     // ..
     // 3. Setup the certificate authority.
-
+    // TODO(ja) : clear up memory if init failed.
     int rc = 0;
     struct mg_str s = { 0 };
 
@@ -87,6 +88,7 @@ void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts)
 
         // Load the cert key.
         s = mg_loadfile(fs, opts->cert);
+        // TODO(JA) : handle error case if loadfile failed
         rc = tls_load_certificates(g_pServerContext, (unsigned char*)s.ptr, s.len + 1);
         if (rc == 0)
         {
@@ -96,6 +98,7 @@ void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts)
 
         // Load the priv key.
         s = mg_loadfile(fs, key);
+        // TODO(JA) : handle error case if loadfile failed
         rc = tls_load_private_key(g_pServerContext, (unsigned char*)s.ptr, s.len + 1);
         // rc should be 1 in case of successfully loaded private key.
         if (rc <= 0)
@@ -138,9 +141,6 @@ int send_pending(struct TLSContext* context, void* client_sock)
         out_buffer_len -= res;
         out_buffer_index += res;
     }
-
-    MG_DEBUG(("send_pending(%d, %u) -> %d", (size_t)client_sock, out_buffer_len, send_res)); 
-
     tls_buffer_clear(context);
     return send_res;
 }
@@ -165,14 +165,6 @@ int do_handshake(struct mg_connection* c,  struct TLSContext* tls, int* len)
     // Send pending.
     send_pending(tls, fd);
 
-    // check if we received enough of data to continue the handshake
-    // return failure otherwise.
-    // if (readBytes < 0)
-    // {
-    //     rc = THESIS_HANDSHAKE_FAILED;
-    //     mg_error(c, "tls_handshake: failed recv hs data.");
-    // }
-    // else
     if (readBytes > 0) // Got some data and good to proceed.
     {
         MG_INFO(("do_handshake : read bytes : %d", readBytes));
@@ -237,51 +229,16 @@ long mg_tls_recv(struct mg_connection* c, void* buf, size_t len)
     // extern ssize_t recv (int __fd, void *__buf, size_t __n, int __flags);
     // rc = recv((size_t)c->fd, buf, (int)len, 0);
 
+    rc = tls_read(tls->pClientContext, buf, len);
 
-    // TODO
-    // we need to call tls_recv if there's more to read
-
-    // do we check first if tls_read has data to process before recv more?
-
-
-    // bytes_read = recv ((intptr_t)c->fd, buf, len, 0);
-    bytes_read = tls_read(tls->client_context, buf, len);
-
-    if (bytes_read == len)
+    if (rc < 0)
     {
-        MG_DEBUG(("tls_recv(): bytes_read == len\n"));
+        mg_error(c, "tlse : read failed");
     }
-
-    // might not be correct either,
-    // cleans up the connection just fine but when moving backwards
-    // in the clent mongoose tries to do the handshake again.
-    // if that's the proper behavior, import the context from saved one.
-    if (bytes_read == 0)
+    else
     {
-        return -1;
+        send_pending(tls->pClientContext, c->fd);
     }
-
-    // if (bytes_read == THESIS_FATAL)
-    // {
-    //     // fatal error
-    // }
-    // else if (bytes_read == 0)
-    // {
-    //     // rc = bytes_read; // OK
-    // }
-    // else
-    // {
-    //     rc = THESIS_WANT_READ; // MORE DATA
-    // }
-
-    // mongoose should handle any pending data
-    if (send_pending(tls->client_context, c->fd) > 0)   // send any pending data
-    {
-        MG_DEBUG(("tls_recv: sent pending data..\n"));
-    }
-
-    MG_DEBUG(("tls_recv : bytes recv %u\n", bytes_read));
-    rc = bytes_read;
 
     return rc;
 }
@@ -311,20 +268,18 @@ long mg_tls_send(struct mg_connection *c, const void *buf, size_t len)
     }
     else
     {
-        tls_close_notify(tls->client_context);
-        send_pending(tls->client_context, c->fd);
+        tls_close_notify(tls->pClientContext);
+        send_pending(tls->pClientContext, c->fd);
     }
+
     return rc;
 }
 
 size_t mg_tls_pending(struct mg_connection *c)
 {
     struct mg_tls* tls = (struct mg_tls*)c->tls;
-    // pending true is returned if application_buffer_len is > 0
-    // tlse does not implement other way to access size of application buffer length
-    size_t ret = tls == NULL ? 0 : (size_t) SSL_pending(tls->client_context);
-    // MG_DEBUG(("mg_tls_pending(%lu) -> %d", c->id, ret));
-    return ret;
+    // Pending true is returned if application_buffer_len is > 0
+    return tls == NULL ? 0 : (size_t) SSL_pending(tls->pClientContext);
 }
 
 void mg_tls_free(struct mg_connection* c)
@@ -351,9 +306,41 @@ struct mg_str mg_loadfile(struct mg_fs *fs, const char *path)
 }
 
 
-int thesis_verify_signature(struct TLSContext *context, struct TLSCertificate **certificate_chain, int len)
+char* tls_file_read(const char* path, size_t* sizep)
 {
-    return 0;
+	FILE* fp;
+	char* data = NULL;
+	size_t size = 0;
+	if ((fp = fopen(path, "r")) != NULL)
+	{
+		printf("fopen(%s, rb)\n", path);
+
+		fseek(fp, 0, SEEK_END);
+		size = (size_t)ftell(fp);
+		rewind(fp);
+		data = (char*)calloc(1, size + 1);
+
+		if (data != NULL)
+		{
+			if (fread(data, 1, size, fp) != size)
+			{
+				printf("fread(..) -- failed\n");
+				free(data);
+				data = NULL;
+			}
+			else
+			{
+				data[size] = '\0';
+				if (sizep != NULL)
+					*sizep = size;
+			}
+		}
+
+		fclose(fp);
+	}
+
+	return data;
 }
 
 #endif
+

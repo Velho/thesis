@@ -1,13 +1,11 @@
-cmake_minimum_required (VERSION 3.12)
+cmake_minimum_required (VERSION 2.8) # 3.12)
 project (thesis)
 
 # project options, used to control separate actions in the build configuration
-option (THESIS_BUILD_EXAMPLES "Build examples for the project." OFF)
-option (THESIS_TLSE_UNIT_TESTS "Build unit tests for the project." ON)
-option (THESIS_BUILD_MONGOOSE "Enable or Disable thesis to build mongoose." OFF)
-option (THESIS_BUILD_AS_LIBRARY "Build library without linking against mongoose." OFF)
-
-set (THESIS_COMPILE_DEFINITONS "" CACHE STRING "Custom compile definitions")
+option (THESIS_BUILD_EXAMPLES       "Build examples for the project."                   OFF)
+option (THESIS_BUILD_UNIT_TESTS     "Build unit tests for the project."                 OFF)
+option (THESIS_BUILD_MONGOOSE       "Enable or Disable thesis to build mongoose."       ON)
+option (THESIS_BUILD_AS_LIBRARY     "Build library without linking against mongoose."   OFF)
 
 # build_mongoose and build_as_library is the same?
 # build_as_lib is meant as parameter to disable any linkage to
@@ -16,15 +14,18 @@ set (THESIS_COMPILE_DEFINITONS "" CACHE STRING "Custom compile definitions")
 
 if (THESIS_BUILD_AS_LIBRARY)
     set (THESIS_BUILD_MONGOOSE OFF)
+    set (THESIS_BUILD_EXAMPLES FALSE)
 endif ()
 
+message ("Thesis building as library: ${THESIS_BUILD_AS_LIBRARY}")
 message ("Thesis building mongoose : ${THESIS_BUILD_MONGOOSE}")
+message ("Thesis building examples : ${THESIS_BUILD_EXAMPLES}")
 
 list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set (THESIS_MG_ARCH "1") # 1 == LINUX, immediate value, set from var instead?
-
+# 1 == LINUX, immediate value, set from var instead?
+set (THESIS_MG_ARCH "1") 
 set (THESIS_MG_DEFINITIONS
     MG_ARCH=${THESIS_MG_ARCH})
 
@@ -50,22 +51,22 @@ target_compile_definitions(thesis-tls
         ${THESIS_MG_DEFINITIONS}
         ${THESIS_COMPILE_DEFINITONS})
 
-target_link_libraries(thesis-tls
-    PRIVATE
-        tlse)
+target_link_libraries(thesis-tls     PUBLIC tlse)
 
 target_link_libraries (thesis-tls
     PRIVATE mongoose)
 
 # enable testing, including the dependencies.
-if (THESIS_TLSE_UNIT_TESTS)
+if (THESIS_BUILD_UNIT_TESTS)
+    message ("Enabling testing..")
     enable_testing()
 
     add_subdirectory (deps/check)
     add_subdirectory (tests)
 endif ()
 
-if (THESIS_TLSE_EXAMPLES)
+if (THESIS_BUILD_EXAMPLES)
+    message ("Including subdirectory examples/")
     add_subdirectory (examples)
 endif ()
 

@@ -11,12 +11,16 @@ add_executable (${THESIS_EX1}
 # Link against thesis-tls, (required to link against mongoose as well??)
 target_link_libraries (${THESIS_EX1}
     PRIVATE
-        thesis-tls tlse mongoose)
+        thesis-tls tlse tomcrypt mongoose)
 
 # Add include headers for the mongoose target
 target_include_directories (${THESIS_EX1}
     PRIVATE
-        thesis-tls mongoose)
+        thesis-tls tomcrypt mongoose)
+
+target_include_directories (${THESIS_EX1}
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/deps/libtomcrypt/src/headers)
 
 set (TARGET_NAME ${THESIS_EX1})
 include (certificates)
