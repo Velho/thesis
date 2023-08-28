@@ -11,7 +11,8 @@ static bool g_IsInitialized = false;
 static struct TLSContext* g_pServerContext = NULL;
 
 /* Private functions */
-static struct mg_str mg_loadfile(struct mg_fs *fs, const char *path);
+static struct mg_str mg_loadfile(struct mg_fs* fs, const char* path);
+static char* tls_file_read(const char* path, size_t* sizep);
 
 void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts)
 {
@@ -288,6 +289,43 @@ struct mg_str mg_loadfile(struct mg_fs *fs, const char *path)
     char *p = mg_file_read(fs, path, &n);
     MG_INFO(("Reading file %s => (%d) %p", path, n, p));
     return mg_str_n(p, n);
+}
+
+
+char* tls_file_read(const char* path, size_t* sizep)
+{
+	FILE* fp;
+	char* data = NULL;
+	size_t size = 0;
+	if ((fp = fopen(path, "r")) != NULL)
+	{
+		printf("fopen(%s, rb)\n", path);
+
+		fseek(fp, 0, SEEK_END);
+		size = (size_t)ftell(fp);
+		rewind(fp);
+		data = (char*)calloc(1, size + 1);
+
+		if (data != NULL)
+		{
+			if (fread(data, 1, size, fp) != size)
+			{
+				printf("fread(..) -- failed\n");
+				free(data);
+				data = NULL;
+			}
+			else
+			{
+				data[size] = '\0';
+				if (sizep != NULL)
+					*sizep = size;
+			}
+		}
+
+		fclose(fp);
+	}
+
+	return data;
 }
 
 #endif
