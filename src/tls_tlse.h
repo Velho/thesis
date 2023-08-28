@@ -7,9 +7,10 @@
 // Define the TLS version to 1.3, TODO : Make this compiler opt.
 #define MG_TLSE_VERSION TLS_V13
 
+
 struct mg_tls {
     struct TLSContext* ctx;     /* SSL context. */
-    struct TLSContext* pClientContext;
+    struct TLSContext* client_context;
 };
 
 #endif
