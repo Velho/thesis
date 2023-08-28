@@ -10,6 +10,16 @@ Git clone the project,
 Initialize the submodules (submodules found under 'deps' folder).
 `git submodule update --init`
 
+### CMake Configuration
+
+| Name | Description | Default value |
+|-|-|-|
+| THESIS_BUILD_EXAMPLES |Build sample application| OFF |
+| THESIS_TLSE_UNIT_TESTS | Build unit tests | ON |
+| THESIS_BUILD_MONGOOSE  | Build [mongoose](#mongoose) | OFF |
+| __DEPRECATED__ ~~THESIS_BUILD_AS_LIBRARY~~  | ~~Link against [mongoose](#mongoose)~~ | OFF |
+| THESIS_COMPILE_DEFINITONS | | |
+
 ### Compiling
 
 Compiler version used to test, (minimum requirements):
@@ -45,6 +55,12 @@ make test
 ```
 
 ## Mongoose
+
+Mongoose can be built as part of this project or from outside as this library
+implements the tls interface for the mongoose so only the headers are required
+for the library compilation. The option to build as library is not anymore used.
+If build mongoose is not set, configuration still assumes the mongoose target
+can be found.
 
 Just by accepting the mongoose interface and initializing the tlse application correctly.
 
