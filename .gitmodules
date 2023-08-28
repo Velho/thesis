@@ -12,4 +12,4 @@
 	url = https://github.com/libcheck/check
 [submodule "deps/libtommath"]
 	path = deps/libtommath
-	url = https://github.com/libtom/libtommath
+	url = https://github.com/velho/libtommath
