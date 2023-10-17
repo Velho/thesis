@@ -63,10 +63,10 @@ if (NOT TLSE_TOMCRYPT_AMALG)
     add_library (tomcrypt ${TOMCRYPT_SOURCES_HEADERS})
     set_property (TARGET tomcrypt PROPERTY C_STANDARD 99)
 
-    target_link_libraries (tomcrypt PUBLIC libtommath)
+    target_link_libraries (tomcrypt PUBLIC tommath)
     target_include_directories (tomcrypt PUBLIC 
-        "${CMAKE_CURRENT_SOURCE_DIR}/libtomcrypt/src/headers"
-        "${CMAKE_CURRENT_SOURCE_DIR}/libtommath")
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/libtomcrypt/src/headers>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/libtommath>)
     target_compile_definitions (tomcrypt
         PRIVATE ${TOMCRYPT_DEFS})
 endif ()
@@ -88,20 +88,18 @@ set_property (TARGET tlse     PROPERTY C_STANDRD 99)
 target_include_directories (tlse 
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
-        tomcrypt libtommath
+        tomcrypt tommath
 )
 
 target_compile_definitions (tlse
     PRIVATE
         ${TOMCRYPT_DEFS}
-    PUBLIC
-        DEBUG
+        ${THESIS_COMPILE_DEFINITIONS}
 )
 
 # print out libtommath compile defs as debug
-get_target_property (tommath_defs libtommath COMPILE_DEFINITIONS)
+get_target_property (tommath_defs tommath COMPILE_DEFINITIONS)
 message ("tommath_defs: ${tommath_defs}")
-
 
 if (NOT TLSE_TOMCRYPT_AMALG)
     message ("Linking tomcrypt to tlse")
@@ -109,11 +107,11 @@ if (NOT TLSE_TOMCRYPT_AMALG)
         PUBLIC 
         #"TLS_AMALGAMATION"
         tomcrypt)
-    target_link_libraries (tlse PRIVATE tomcrypt libtommath)
+    target_link_libraries (tlse PRIVATE tomcrypt tommath)
     target_include_directories (tlse
         PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/libtomcrypt/src/headers
-        ${CMAKE_CURRENT_SOURCE_DIR}/libtommath/src
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/libtomcrypt/src/headers>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/libtommath/src>
     )
 endif ()
 

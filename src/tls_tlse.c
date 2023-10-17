@@ -54,9 +54,9 @@ void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts)
     }
 
     const unsigned char is_server = 1;
-    g_pServerContext = tls_create_context(is_server, MG_TLSE_VERSION);
+    tls->pServerHandle = tls_create_context(is_server, MG_TLSE_VERSION);
 
-    if (g_pServerContext == NULL)
+    if (tls->pServerHandle == NULL)
     {
         mg_error(c, "tls_tlse : failed to create tls context");
         goto fail;
@@ -71,8 +71,9 @@ void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts)
 
     if (opts->ca != NULL && opts->ca[0] != '\0')
     {
+        // load the ca => handle case if failed to load key
         s = mg_loadfile(fs, opts->ca);
-        rc = tls_load_root_certificates(g_pServerContext, (unsigned char*)s.ptr, s.len + 1);
+        rc = tls_load_root_certificates(tls->pServerHandle, (unsigned char*)s.ptr, s.len + 1);
 
         if (!rc) // Provided count of root certificates should be > 0.
         {
@@ -86,20 +87,20 @@ void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts)
     {
         const char* key = opts->certkey == NULL ? opts->cert : opts->certkey;
 
-        // Load the cert key.
+        // load the cert key => handle case if failed to load key
         s = mg_loadfile(fs, opts->cert);
         // TODO(JA) : handle error case if loadfile failed
-        rc = tls_load_certificates(g_pServerContext, (unsigned char*)s.ptr, s.len + 1);
+        rc = tls_load_certificates(tls->pServerHandle, (unsigned char*)s.ptr, s.len + 1);
         if (rc == 0)
         {
             mg_error(c, "tls_tlse : invalid tls server certificate");
             goto fail;
         }
 
-        // Load the priv key.
+        // load the priv key => handle case if failed to load key
         s = mg_loadfile(fs, key);
         // TODO(JA) : handle error case if loadfile failed
-        rc = tls_load_private_key(g_pServerContext, (unsigned char*)s.ptr, s.len + 1);
+        rc = tls_load_private_key(tls->pServerHandle, (unsigned char*)s.ptr, s.len + 1);
         // rc should be 1 in case of successfully loaded private key.
         if (rc <= 0)
         {
@@ -152,7 +153,7 @@ int do_handshake(struct mg_connection* c,  struct TLSContext* tls, int* len)
     void* fd = c->fd;
     *len = 0; // set output len to 0.
 
-    unsigned char hsBuffer[0xFFFF];
+    unsigned char hsBuffer[0xFFFF]; // reserve static buffer for inc data
     while ((readBytes = recv((size_t)fd, hsBuffer, sizeof(hsBuffer), 0)) > 0)
     {
         if (tls_consume_stream(tls, hsBuffer, readBytes, NULL) > 0)
@@ -189,8 +190,8 @@ void mg_tls_handshake(struct mg_connection* c) {
     int rc = 1;
     int readBytes = 0;
 
-    struct TLSContext* client = tls_accept(g_pServerContext);
-    tls->client_context = client;
+    struct TLSContext* client = tls_accept(tls->pServerHandle);
+    tls->pClientHandle = client;
 
     // Do handshake until the connection is established,
     // tls_recv and tls_send is not capable of recv/send
@@ -229,7 +230,7 @@ long mg_tls_recv(struct mg_connection* c, void* buf, size_t len)
     // extern ssize_t recv (int __fd, void *__buf, size_t __n, int __flags);
     // rc = recv((size_t)c->fd, buf, (int)len, 0);
 
-    rc = tls_read(tls->pClientContext, buf, len);
+    rc = tls_read(tls->pClientHandle, buf, len);
 
     if (rc < 0)
     {
@@ -237,7 +238,7 @@ long mg_tls_recv(struct mg_connection* c, void* buf, size_t len)
     }
     else
     {
-        send_pending(tls->pClientContext, c->fd);
+        send_pending(tls->pClientHandle, c->fd);
     }
 
     return rc;
@@ -254,9 +255,9 @@ long mg_tls_send(struct mg_connection *c, const void *buf, size_t len)
     // rc = send((size_t)c->fd, buf, (int)len, 0);
 
     // assert len > 0
-    rc = tls_write(tls->client_context, buf, len); // TODO : Make sure that len is correct.
+    rc = tls_write(tls->pClientHandle, buf, len); // TODO : Make sure that len is correct.
 
-    // tls_close_notify(tls->pClientContext);
+    // tls_close_notify(tls->pClient);
 
     if (rc < 0)
     {
@@ -268,8 +269,8 @@ long mg_tls_send(struct mg_connection *c, const void *buf, size_t len)
     }
     else
     {
-        tls_close_notify(tls->pClientContext);
-        send_pending(tls->pClientContext, c->fd);
+        tls_close_notify(tls->pClientHandle);
+        send_pending(tls->pClientHandle, c->fd);
     }
 
     return rc;
@@ -279,15 +280,15 @@ size_t mg_tls_pending(struct mg_connection *c)
 {
     struct mg_tls* tls = (struct mg_tls*)c->tls;
     // Pending true is returned if application_buffer_len is > 0
-    return tls == NULL ? 0 : (size_t) SSL_pending(tls->pClientContext);
+    return tls == NULL ? 0 : (size_t) SSL_pending(tls->pClientHandle);
 }
 
 void mg_tls_free(struct mg_connection* c)
 {
     struct mg_tls* tls = (struct mg_tls*)c->tls;
 
-    // Clean up the tls->context.
-    SSL_CTX_free(tls->client_context);
+    tls_destroy_context(tls->pClientHandle);
+    tls_destroy_context(tls->pServerHandle);
     free(tls);
 
     c->tls = NULL;

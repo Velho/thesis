@@ -1,11 +1,13 @@
-cmake_minimum_required (VERSION 2.8) # 3.12)
+cmake_minimum_required (VERSION 3.12)
 project (thesis)
 
 # project options, used to control separate actions in the build configuration
 option (THESIS_BUILD_EXAMPLES       "Build examples for the project."                   OFF)
 option (THESIS_BUILD_UNIT_TESTS     "Build unit tests for the project."                 OFF)
-option (THESIS_BUILD_MONGOOSE       "Enable or Disable thesis to build mongoose."       ON)
+option (THESIS_BUILD_MONGOOSE       "Enable or Disable thesis to build mongoose."       OFF)
 option (THESIS_BUILD_AS_LIBRARY     "Build library without linking against mongoose."   OFF)
+
+set (THESIS_TLSE_DEBUG  FALSE CACHE BOOL "Enable debugging for tlse.")
 
 # build_mongoose and build_as_library is the same?
 # build_as_lib is meant as parameter to disable any linkage to
@@ -42,20 +44,25 @@ add_library (thesis-tls ${THESIS_TLS_SOURCES})
 # add includes for the libtlse, mongoose and tlse from deps folder.
 target_include_directories(thesis-tls
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/mongoose
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/mongoose/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/tlse)
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/mongoose>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/mongoose/src>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/tlse>)
 
 target_compile_definitions(thesis-tls
     PUBLIC
         ${THESIS_MG_DEFINITIONS}
         ${THESIS_COMPILE_DEFINITONS})
 
+if (CMAKE_BUILD_TYPE EQUAL "Debug" AND THESIS_TLSE_DEBUG)
+    target_compile_definitions (tlse PRIVATE ${THESIS_COMPILE_DEFINITONS})
+endif ()
+
 target_link_libraries(thesis-tls     PUBLIC tlse)
 
-target_link_libraries (thesis-tls
-    PRIVATE mongoose)
-
+# skip link if mg built outside
+if (THESIS_BUILD_MONGOOSE)
+    target_link_libraries (thesis-tls PRIVATE mongoose)
+endif ()
 # enable testing, including the dependencies.
 if (THESIS_BUILD_UNIT_TESTS)
     message ("Enabling testing..")
