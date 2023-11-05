@@ -2,24 +2,17 @@ cmake_minimum_required (VERSION 3.12)
 project (thesis)
 
 # project options, used to control separate actions in the build configuration
-option (THESIS_BUILD_EXAMPLES       "Build examples for the project."                   OFF)
-option (THESIS_BUILD_UNIT_TESTS     "Build unit tests for the project."                 OFF)
-option (THESIS_BUILD_MONGOOSE       "Enable or Disable thesis to build mongoose."       OFF)
-option (THESIS_BUILD_AS_LIBRARY     "Build library without linking against mongoose."   OFF)
-
-set (THESIS_TLSE_DEBUG  FALSE CACHE BOOL "Enable debugging for tlse.")
+option (THESIS_BUILD_EXAMPLES      FALSE "Build examples for the project.")
+option (THESIS_BUILD_UNIT_TESTS    FALSE "Build unit tests for the project.")
+option (THESIS_BUILD_AS_LIBRARY    FALSE "Build library without linking against mongoose.")
+option (THESIS_BUILD_MONGOOSE      FALSE "Enable or Disable thesis to build mongoose.")
+option (THESIS_TLSE_DEBUG          FALSE "Enable debugging for tlse.")
 
 # build_mongoose and build_as_library is the same?
 # build_as_lib is meant as parameter to disable any linkage to
 # mongoose for example. perhaps it's easier to understand if
 # user wants to link against
 
-if (THESIS_BUILD_AS_LIBRARY)
-    set (THESIS_BUILD_MONGOOSE OFF)
-    set (THESIS_BUILD_EXAMPLES FALSE)
-endif ()
-
-message ("Thesis building as library: ${THESIS_BUILD_AS_LIBRARY}")
 message ("Thesis building mongoose : ${THESIS_BUILD_MONGOOSE}")
 message ("Thesis building examples : ${THESIS_BUILD_EXAMPLES}")
 
