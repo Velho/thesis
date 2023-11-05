@@ -1,20 +1,21 @@
 
+# can be set outside of certificates to control the subdir name
+set (THESIS_PROJECT_FOLDER_NAME "thesis")
+
 # if the thesis is added as subdirectory,
 # how to correctly resolve the copying process,
 # even if it's called from a different root folder,
 # ${THESIS_PROJECT_DIR}
 set (THESIS_TEST_CERTIFICATES
-    "tests/certs/ca.pem"
-    "tests/certs/cert-2048.pem"
-    "tests/certs/pk-rsa-2048.pem"
-    "tests/certs/ecsda/cert.pem"
-    "tests/certs/ecsda/private-key.pem"
+    "${THESIS_PROJECT_FOLDER_NAME}/tests/certs/ca.pem"
+    "${THESIS_PROJECT_FOLDER_NAME}/tests/certs/cert-2048.pem"
+    "${THESIS_PROJECT_FOLDER_NAME}/tests/certs/pk-rsa-2048.pem"
+    "${THESIS_PROJECT_FOLDER_NAME}/tests/certs/ecsda/cert.pem"
+    "${THESIS_PROJECT_FOLDER_NAME}/tests/certs/ecsda/private-key.pem"
 )
 
 include (functions)
 
-# can be set outside of certificates to control the subdir name
-set (THESIS_PROJECT_FOLDER_NAME "thesis")
 
 # @fn thesis_copy_certificates
 # @param TARGET_NAME target name
